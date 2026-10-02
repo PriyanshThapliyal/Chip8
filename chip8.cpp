@@ -335,7 +335,7 @@ bool Chip8::loadRom(const char * filename)
     file.seekg(0, std::ios::beg);
 
     // Check if ROM fits in memory (4096 - 512 = 3584 B)
-    if(size > (4098 - 512))
+    if(size > (4096 - 512))
     {
         std::cout << "ROM is too large : " << size << std::endl;
         return false;
