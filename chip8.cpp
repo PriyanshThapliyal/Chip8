@@ -73,7 +73,84 @@ void Chip8::emulateCycle()
                                     pc += 2;
                                     break;
 
-                        default: std::cout << "Uknown opcode [0x0000] : " << opcode;
+                        case 0x00C0 ... 0x00CF:        // 0x00CN : Scroll down by N pixels 
+                        {
+                            int n = opcode & 0x000F;
+                            for(int y = 31; y >= n; --y)
+                            {
+                                for(int x = 0; x < 64; x++)
+                                {
+                                    gfx[x + y * 64] = gfx[x + (y - n) * 64];
+                                }
+                            }
+                            for(int i = 0; i < n * 64; i++)
+                                gfx[i] = 0;
+
+                            drawFlag = true;
+                            pc += 2;
+                            break;
+                        }
+
+                        case 0x00D0 ... 0x00DF:        // 0x00DN : Scroll up by N pixels (XO-CHIP)
+                        {
+                            int n = opcode & 0x000F;
+                            for(int y = 0; y < 32 - n; ++y)
+                            {
+                                for(int x = 0; x < 64; x++)
+                                {
+                                    gfx[x + y * 64] = gfx[x + (y + n) * 64];
+                                }
+                            }
+                            for(int y = 32 - n; y < 32; ++y)
+                            {
+                                for(int x = 0; x < 64; x++)
+                                {
+                                    gfx[x + y * 64] = 0;
+                                }
+                            }
+                            drawFlag = true;
+                            pc += 2;
+                            break;
+                        }
+
+                        case 0x00FB:        // 0x00FB : Scroll right by 4 pixels
+                        {
+                            for(int y = 0; y < 32; y++)
+                            {
+                                for(int x = 63; x >= 4; --x)
+                                    gfx[x + y * 64] = gfx[(x - 4) + y * 64];
+                                for(int x = 0; x < 4; x++)
+                                    gfx[x + y * 64] = 0;
+                            }
+                            drawFlag = true;
+                            pc += 2;
+                            break;
+                        }
+
+                        case 0x00FC:        // 0x00FC : Scroll left by 4 pixels
+                        {
+                            for(int y = 0; y < 32; y++)
+                            {
+                                for(int x = 0; x < 60; ++x)
+                                    gfx[x + y * 64] = gfx[(x + 4) + y * 64];
+                                for(int x = 60; x < 64; x++)
+                                    gfx[x + y * 64] = 0;
+                            }
+                            drawFlag = true;
+                            pc += 2;
+                            break;
+                        }
+
+                        case 0x00FE:        // 0x00FE : Disable extended screen mode (64x32)
+                        case 0x00FF:        // 0x00FF : Enable extended screen mode
+                            drawFlag = true;
+                            pc += 2;
+                            break;
+                        
+                        default: 
+                            std::cout << "Unknown opcode [0x0000] : 0x" << std::hex << opcode << std::dec << std::endl;
+                            pc += 2;
+                            break;
                      }
                      break;
 
@@ -310,15 +387,15 @@ void Chip8::emulateCycle()
             std::cout << "Uknown opcode" << opcode;
     }
 
+}
+
+void Chip8::updateTimers()
+{
     if(delayTimer > 0)
         --delayTimer;
 
     if(soundTimer > 0)
-    {
-        if(soundTimer == 1)
-            std::cout << "BEEP!\n";
         --soundTimer;
-    }
 }
 
 bool Chip8::loadRom(const char * filename)

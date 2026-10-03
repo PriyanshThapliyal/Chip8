@@ -21,9 +21,20 @@ int main(int argc, char* argv[])
     if(!display.init())
         return 1;
 
+    uint32_t lastTimerTime = SDL_GetTicks();
+
     while(display.handleInput(chip8.key))
     {
         chip8.emulateCycle();
+
+        uint32_t currentTime = SDL_GetTicks();
+        if(currentTime - lastTimerTime >= 16) // ~60 Hz (every 16.6ms)
+        {
+            chip8.updateTimers();
+            lastTimerTime = currentTime;
+        }
+
+        display.updateAudio(chip8.soundTimer > 0);
 
         if(chip8.drawFlag)
         {

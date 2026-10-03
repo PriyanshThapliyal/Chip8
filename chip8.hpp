@@ -11,12 +11,14 @@ class Chip8
 
         void initialize();
         void emulateCycle();
+        void updateTimers();
         bool loadRom(const char * filename);
         bool drawFlag = false;
         unsigned char key[16]; // hex based keypad
         // 2048 pixels n Chip 8 
         unsigned char gfx[64*32];
-
+        unsigned char delayTimer = 0;
+        unsigned char soundTimer = 0;
 
 private:
     unsigned short opcode;
@@ -29,9 +31,6 @@ private:
 
     unsigned short I; // Index register
     unsigned short pc; // Program counter 
-
-    unsigned char delayTimer;
-    unsigned char soundTimer; 
 
     unsigned short stack[16];
     unsigned short sp;

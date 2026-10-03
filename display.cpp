@@ -1,3 +1,4 @@
+#include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
@@ -27,9 +28,26 @@ const SDL_Keycode keymap[16] = {
     SDLK_v
 };
 
+static void audioCallback(void* userdata, Uint8* stream, int len)
+{
+    (void)userdata;
+    int16_t* buffer = reinterpret_cast<int16_t*>(stream);
+    int samples = len / sizeof(int16_t);
+    static int runningSampleIndex = 0;
+    const int sampleRate = 44100;
+    const int toneHz = 440;
+    const int halfPeriod = sampleRate / toneHz / 2;
+
+    for (int i = 0; i < samples; ++i)
+    {
+        buffer[i] = ((runningSampleIndex / halfPeriod) % 2 == 0) ? 3000 : -3000;
+        runningSampleIndex++;
+    }
+}
+
 bool Display::init()
 {
-    if(SDL_Init(SDL_INIT_VIDEO) < 0)
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
     {
         std::cout << "SDL failed to init : "  << SDL_GetError() << std::endl;
         return false;
@@ -59,6 +77,20 @@ bool Display::init()
         return false;
     }
 
+    SDL_AudioSpec want, have;
+    SDL_zero(want);
+    want.freq = 44100;
+    want.format = AUDIO_S16SYS;
+    want.channels = 1;
+    want.samples = 2048;
+    want.callback = audioCallback;
+
+    audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
+    if(audioDevice == 0)
+    {
+        std::cout << "Warning: Failed to open audio device: " << SDL_GetError() << std::endl;
+    }
+
     return true;
 }
 
@@ -76,6 +108,14 @@ void Display::draw(const unsigned char* gfx)
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
+}
+
+void Display::updateAudio(bool beeping)
+{
+    if(audioDevice != 0)
+    {
+        SDL_PauseAudioDevice(audioDevice, beeping ? 0 : 1);
+    }
 }
 
 bool Display::handleInput(unsigned char* key)
@@ -108,6 +148,11 @@ bool Display::handleInput(unsigned char* key)
 
 void Display::cleanup()
 {
+    if(audioDevice != 0)
+    {
+        SDL_CloseAudioDevice(audioDevice);
+        audioDevice = 0;
+    }
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
