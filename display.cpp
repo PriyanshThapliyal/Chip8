@@ -28,6 +28,23 @@ const SDL_Keycode keymap[16] = {
     SDLK_v
 };
 
+const Palette palettes[] = {
+    { "Classic Monochrome", 0xFF121212, 0xFFE0E0E0},
+    { "Phosphor Green"    , 0xFF081408, 0xFF33FF66},
+    { "Amber CRT"         , 0xFF140A02, 0xFFFF8000},
+    { "Game Boy 1989"     , 0xFF1F381F, 0xFF8BAC0F},
+    { "Nord Frost"        , 0xFF242933, 0xFF88C0D0}
+};
+
+const int NUM_PALETTES = sizeof(palettes) / sizeof(palettes[0]);
+
+void Display::cycleTheme()      // Method to change Theme
+{
+    currentTheme = (currentTheme + 1) % NUM_PALETTES;
+    std::cout << "Theme : " << palettes[currentTheme].name << std::endl;
+}
+
+
 static void audioCallback(void* userdata, Uint8* stream, int len)
 {
     (void)userdata;
@@ -97,10 +114,12 @@ bool Display::init()
 
 void Display::draw(const unsigned char* gfx)
 {
+    uint32_t fg = palettes[currentTheme].fg;
+    uint32_t bg = palettes[currentTheme].bg;
+
     for(int i = 0; i < 64*32; i++)
     {
-        pixels[i] = gfx[i] ? 0xFFFFFFFF
-                            :0xFF000000;
+        pixels[i] = gfx[i] ? fg : bg; 
     }
 
     SDL_UpdateTexture(texture, nullptr, pixels, 64*sizeof(uint32_t));
@@ -118,7 +137,7 @@ void Display::updateAudio(bool beeping)
     }
 }
 
-bool Display::handleInput(unsigned char* key)
+bool Display::handleInput(unsigned char* key, int& speed)
 {
     SDL_Event e;
     while(SDL_PollEvent(&e))
@@ -128,7 +147,16 @@ bool Display::handleInput(unsigned char* key)
             case SDL_QUIT: return false;
             case SDL_KEYDOWN:if(e.key.keysym.sym == SDLK_ESCAPE)
                                 return false;
-                             for(int i = 0; i < 16; i++)
+                
+                             if(e.key.keysym.sym == SDLK_EQUALS)
+                                speed += 5 , std::cout << "Cycle / Frame : " << speed << std::endl;
+                             else if(e.key.keysym.sym == SDLK_MINUS)
+                                speed = speed > 5 ? speed - 5 : 1, std::cout << " Cycle / Frame : "   << speed << std::endl;
+                
+                             if(e.key.keysym.sym == SDLK_k)
+                                cycleTheme();
+                
+                            for(int i = 0; i < 16; i++)
                              {
                                 if(e.key.keysym.sym == keymap[i])
                                     key[i] = 1;

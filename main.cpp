@@ -3,14 +3,20 @@
 #include "chip8.hpp"
 #include "display.hpp"
 
+int cyclePerFrame = 5;
+
 int main(int argc, char* argv[])
 {
-    if(argc != 2)
+    if(argc < 2)
     {
-        std::cout << "Usage : " << argv[0] << std::endl;
+        std::cout << "Usage : " << argv[0] << " <ROM> [speed] \n";
         return 1;
     }
-
+    if(argc == 3)       // Takes the speed as optional argument and changes emulateCycle
+    {
+        cyclePerFrame = std::stoi(argv[2]);
+    }
+    
     Chip8 chip8;
     chip8.initialize();
 
@@ -23,9 +29,12 @@ int main(int argc, char* argv[])
 
     uint32_t lastTimerTime = SDL_GetTicks();
 
-    while(display.handleInput(chip8.key))
+    while(display.handleInput(chip8.key, cyclePerFrame))
     {
-        chip8.emulateCycle();
+        for(int i = 0; i < cyclePerFrame; i++)
+        {
+            chip8.emulateCycle();
+        }
 
         uint32_t currentTime = SDL_GetTicks();
         if(currentTime - lastTimerTime >= 16) // ~60 Hz (every 16.6ms)
