@@ -4,6 +4,8 @@
 #include "display.hpp"
 
 int cyclePerFrame = 5;
+bool isPaused = false;
+bool isReset = false;
 
 int main(int argc, char* argv[])
 {
@@ -11,8 +13,7 @@ int main(int argc, char* argv[])
     {
         std::cout << "Usage : " << argv[0] << " <ROM> [speed] \n";
         return 1;
-    }
-    if(argc == 3)       // Takes the speed as optional argument and changes emulateCycle
+    } if(argc == 3)       // Takes the speed as optional argument and changes emulateCycle
     {
         cyclePerFrame = std::stoi(argv[2]);
     }
@@ -29,22 +30,30 @@ int main(int argc, char* argv[])
 
     uint32_t lastTimerTime = SDL_GetTicks();
 
-    while(display.handleInput(chip8.key, cyclePerFrame))
-    {
-        for(int i = 0; i < cyclePerFrame; i++)
+    while(display.handleInput(chip8.key, cyclePerFrame, isPaused, isReset))
+    { 
+        if(isReset)
         {
-            chip8.emulateCycle();
+            chip8.initialize();
+            chip8.loadRom(argv[1]);
+            isReset = false;
+            std::cout << "Game Reset" << std::endl;
         }
-
-        uint32_t currentTime = SDL_GetTicks();
-        if(currentTime - lastTimerTime >= 16) // ~60 Hz (every 16.6ms)
+        if(!isPaused) 
         {
-            chip8.updateTimers();
-            lastTimerTime = currentTime;
+            for(int i = 0; i < cyclePerFrame; i++)
+            {
+                chip8.emulateCycle();
+            }
+
+            uint32_t currentTime = SDL_GetTicks();
+            if(currentTime - lastTimerTime >= 16) // ~60 Hz (every 16.6ms)
+            {
+                chip8.updateTimers();
+                lastTimerTime = currentTime;
+            }
+            display.updateAudio(!isPaused && chip8.soundTimer > 0);
         }
-
-        display.updateAudio(chip8.soundTimer > 0);
-
         if(chip8.drawFlag)
         {
             display.draw(chip8.gfx);

@@ -137,7 +137,7 @@ void Display::updateAudio(bool beeping)
     }
 }
 
-bool Display::handleInput(unsigned char* key, int& speed)
+bool Display::handleInput(unsigned char* key, int& speed, bool& paused, bool& reset)
 {
     SDL_Event e;
     while(SDL_PollEvent(&e))
@@ -147,7 +147,7 @@ bool Display::handleInput(unsigned char* key, int& speed)
             case SDL_QUIT: return false;
             case SDL_KEYDOWN:if(e.key.keysym.sym == SDLK_ESCAPE)
                                 return false;
-                
+                             
                              if(e.key.keysym.sym == SDLK_EQUALS)
                                 speed += 5 , std::cout << "Cycle / Frame : " << speed << std::endl;
                              else if(e.key.keysym.sym == SDLK_MINUS)
@@ -155,7 +155,12 @@ bool Display::handleInput(unsigned char* key, int& speed)
                 
                              if(e.key.keysym.sym == SDLK_k)
                                 cycleTheme();
-                
+                            
+                             if(e.key.keysym.sym == SDLK_p)
+                                paused = paused ^ true;
+                             if(e.key.keysym.sym == SDLK_o)
+                                reset = true;
+
                             for(int i = 0; i < 16; i++)
                              {
                                 if(e.key.keysym.sym == keymap[i])

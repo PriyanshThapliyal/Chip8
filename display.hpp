@@ -17,7 +17,7 @@ class Display
 public:
     bool init();
     void draw(const unsigned char* gfx);
-    bool handleInput(unsigned char* key, int& speed);
+    bool handleInput(unsigned char* key, int& speed, bool& paused, bool& reset);
     void updateAudio(bool beeping);
     void cleanup();
     void cycleTheme();
