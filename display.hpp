@@ -16,7 +16,7 @@ class Display
 {
 public:
     bool init();
-    void draw(const unsigned char* gfx);
+    void draw(const unsigned char* gfx, bool isHighRes);
     bool handleInput(unsigned char* key, int& speed, bool& paused, bool& reset);
     void updateAudio(bool beeping);
     void cleanup();
@@ -27,6 +27,6 @@ private:
     SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
     SDL_AudioDeviceID audioDevice = 0;
-    uint32_t pixels[64*32];
+    uint32_t pixels[128*64];
     int currentTheme = 0;
 };

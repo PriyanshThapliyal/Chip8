@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
         }
         if(chip8.drawFlag)
         {
-            display.draw(chip8.gfx);
+            display.draw(chip8.gfx, chip8.isHighRes);
             chip8.drawFlag = false;
         }
 

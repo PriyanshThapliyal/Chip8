@@ -86,7 +86,7 @@ bool Display::init()
         return false;
     }
     
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, 64, 32);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, 128, 64);
 
     if(!texture)
     {
@@ -112,17 +112,36 @@ bool Display::init()
 }
 
 
-void Display::draw(const unsigned char* gfx)
+void Display::draw(const unsigned char* gfx, bool isHighRes)
 {
     uint32_t fg = palettes[currentTheme].fg;
     uint32_t bg = palettes[currentTheme].bg;
 
-    for(int i = 0; i < 64*32; i++)
+    if (isHighRes)
     {
-        pixels[i] = gfx[i] ? fg : bg; 
+        for(int i = 0; i < 128*64; i++)
+        {
+            pixels[i] = gfx[i] ? fg : bg;
+        }
+    }
+    else
+    {
+        for(int y = 0; y < 32; y++)
+        {
+            for(int x = 0; x < 64; x++)
+            {
+                uint32_t color = gfx[x + (y * 64)] ? fg : bg;
+                int pX = x * 2;
+                int pY = y * 2;
+                pixels[pX + (pY * 128)] = color;
+                pixels[(pX + 1) + (pY * 128)] = color;
+                pixels[pX + ((pY + 1) * 128)] = color;
+                pixels[(pX + 1) + ((pY + 1) * 128)] = color;
+            }
+        }
     }
 
-    SDL_UpdateTexture(texture, nullptr, pixels, 64*sizeof(uint32_t));
+    SDL_UpdateTexture(texture, nullptr, pixels, 128*sizeof(uint32_t));
 
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);

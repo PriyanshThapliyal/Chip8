@@ -16,7 +16,8 @@ class Chip8
         bool drawFlag = false;
         unsigned char key[16]; // hex based keypad
         // 2048 pixels n Chip 8 
-        unsigned char gfx[64*32];
+        unsigned char gfx[128*64];
+        bool isHighRes = false;
         unsigned char delayTimer = 0;
         unsigned char soundTimer = 0;
 
